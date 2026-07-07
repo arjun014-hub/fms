@@ -8,6 +8,59 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
 </head>
+<style>
+    /* Ensure the table can scroll horizontally on small screens */
+    .table-responsive {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch; 
+        width: 100%;
+    }
+
+    /* Make the first column (Date) sticky */
+    .sticky-col-1 {
+        position: sticky;
+        left: 0;
+        background-color: #ffffff;
+        border-right: 1px solid #e5e7eb;
+    }
+
+    /* Make the second column (Day Count) sticky */
+    .sticky-col-2 {
+        position: sticky;
+        left: 120px; /* Matches the 120px min-width of the Date column */
+        background-color: #ffffff;
+        border-right: 2px solid #e5e7eb; 
+    }
+
+    /* Keep row data above standard scroll area but below headers */
+    tbody .sticky-col-1, tbody .sticky-col-2 {
+        z-index: 10;
+    }
+
+    /* Intersection of top header and sticky left columns must have highest z-index */
+    thead .sticky-col-1, thead .sticky-col-2 {
+        z-index: 30;
+        background-color: #ffffff; 
+    }
+
+    /* Animation classes for the plot details header */
+    .plot-details-header {
+        transition: max-height 0.4s ease-out, opacity 0.3s ease-out, padding 0.4s ease-out, margin 0.4s ease-out;
+        max-height: 500px; 
+        opacity: 1;
+        overflow: hidden;
+    }
+
+    .plot-details-header.hidden-on-scroll {
+        max-height: 0;
+        opacity: 0;
+        padding-top: 0;
+        padding-bottom: 0;
+        margin-top: 0;
+        margin-bottom: 0;
+        border: none;
+    }
+</style>
 <body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col relative overflow-hidden">
 
     <header class="bg-purple-800 text-white p-4 shadow-md flex justify-between items-center z-10">
@@ -24,7 +77,8 @@
 
     <main class="flex-grow p-4 md:p-6 max-w-full mx-auto w-full overflow-hidden flex flex-col">
         
-        <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200 shrink-0">
+        <!-- Plot Details Header with Animation ID -->
+        <div id="plot-header-container" class="plot-details-header flex flex-col md:flex-row justify-between items-start md:items-center mb-4 bg-white p-4 rounded-xl shadow-sm border border-gray-200 shrink-0">
             <div>
                 <h2 class="text-2xl font-bold text-gray-900"><span id="lblPlotSchedule">Plot Schedule</span> - <span id="plotNameDisplay" class="text-purple-700"></span></h2>
                 <p class="text-sm text-gray-500 font-medium mt-1">
@@ -49,20 +103,21 @@
                     <button id="btnExportPDF" onclick="exportPDF()" class="bg-red-600 text-white text-xs font-bold px-4 py-2 rounded hover:bg-red-700 transition shadow-sm">Export PDF</button>
                 </div>
             </div>
-            <div class="overflow-x-auto overflow-y-auto flex-grow">
+            <!-- Added Scroll ID to this container -->
+            <div id="manualScrollArea" class="overflow-x-auto overflow-y-auto flex-grow table-responsive">
                 <table class="w-full text-left border-collapse min-w-[1200px]">
-                    <thead class="sticky top-0 bg-white shadow-sm z-10">
-                        <tr class="border-b border-gray-200">
-                            <th id="thDate1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Date</th>
-                            <th id="thDayCount1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Day Count</th>
-                            <th id="thSpray1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Actual Spray Done</th>
-                            <th id="thFert1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Actual Fertilization Done</th>
-                            <th id="thLabor" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Labor Used</th>
-                            <th id="thAction1" class="p-3 text-sm font-bold text-gray-700 text-center">Action</th>
+                    <thead class="sticky top-0 shadow-sm z-20">
+                        <tr class="border-b border-gray-200 bg-white">
+                            <th id="thDate1" class="sticky-col-1 p-3 text-sm font-bold text-gray-700 whitespace-nowrap min-w-[120px]">Date</th>
+                            <th id="thDayCount1" class="sticky-col-2 p-3 text-sm font-bold text-gray-700 whitespace-nowrap min-w-[100px]">Day Count</th>
+                            <th id="thSpray1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap bg-white">Actual Spray Done</th>
+                            <th id="thFert1" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap bg-white">Actual Fertilization Done</th>
+                            <th id="thLabor" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap bg-white">Labor Used</th>
+                            <th id="thAction1" class="p-3 text-sm font-bold text-gray-700 text-center bg-white">Action</th>
                         </tr>
                     </thead>
                     <tbody id="manualTableBody">
-                        </tbody>
+                    </tbody>
                 </table>
             </div>
         </div>
@@ -86,19 +141,20 @@
                         </button>
                     </div>
                 </div>
-                <div class="overflow-x-auto overflow-y-auto flex-grow">
+                <!-- Added Scroll ID to this container -->
+                <div id="preplanScrollArea" class="overflow-x-auto overflow-y-auto flex-grow table-responsive">
                     <table class="w-full text-left border-collapse min-w-[1200px]">
-                        <thead class="sticky top-0 bg-white shadow-sm z-10">
-                            <tr class="border-b border-gray-200">
-                                <th id="thDate2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Date</th>
-                                <th id="thDayCount2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Day Count</th>
-                                <th id="thSpray2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Planned Spray</th>
-                                <th id="thFert2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap">Planned Fertilization</th>
-                                <th id="thAction2" class="p-3 text-sm font-bold text-gray-700 text-center">Action</th>
+                        <thead class="sticky top-0 shadow-sm z-20">
+                            <tr class="border-b border-gray-200 bg-white">
+                                <th id="thDate2" class="sticky-col-1 p-3 text-sm font-bold text-gray-700 whitespace-nowrap min-w-[120px]">Date</th>
+                                <th id="thDayCount2" class="sticky-col-2 p-3 text-sm font-bold text-gray-700 whitespace-nowrap min-w-[100px]">Day Count</th>
+                                <th id="thSpray2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap bg-white">Planned Spray</th>
+                                <th id="thFert2" class="p-3 text-sm font-bold text-gray-700 whitespace-nowrap bg-white">Planned Fertilization</th>
+                                <th id="thAction2" class="p-3 text-sm font-bold text-gray-700 text-center bg-white">Action</th>
                             </tr>
                         </thead>
                         <tbody id="preplanTableBody">
-                            </tbody>
+                        </tbody>
                     </table>
                 </div>
             </div>
@@ -118,7 +174,7 @@
                 </div>
 
                 <div id="vaultFilesGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    </div>
+                </div>
                 
                 <div id="vaultEmptyState" class="hidden flex-col items-center justify-center py-12 text-center">
                     <div class="bg-gray-200 text-gray-400 rounded-full w-16 h-16 flex items-center justify-center mb-4 text-2xl font-bold">DOC</div>
@@ -195,7 +251,6 @@
             document.getElementById('dailyExecutionTitle').innerText = t.dailyExecutionTitle;
             document.getElementById('dailyExecutionSub').innerText = t.dailyExecutionSub;
             
-            // Table headers
             document.getElementById('thDate1').innerText = t.thDate;
             document.getElementById('thDate2').innerText = t.thDate;
             document.getElementById('thDayCount1').innerText = t.thDayCount;
@@ -224,7 +279,6 @@
             document.getElementById('btnExportPDF').innerText = t.btnExportPDF;
         }
 
-        // --- Notification System ---
         function showNotification(message, type = 'success') {
             const toast = document.getElementById('notificationToast');
             const msgEl = document.getElementById('toastMessage');
@@ -281,7 +335,23 @@
             await loadExistingManualData(plotId);
             await loadVaultFiles(plotId); 
             await loadExistingPlanData(plotId); 
+
+            // Initialize scroll listeners for the animation effect
+            document.getElementById('manualScrollArea').addEventListener('scroll', handleScrollAnimation);
+            document.getElementById('preplanScrollArea').addEventListener('scroll', handleScrollAnimation);
         });
+
+        // --- Scroll Animation Logic ---
+        function handleScrollAnimation() {
+            const header = document.getElementById("plot-header-container");
+            if (!header) return;
+            
+            if (this.scrollTop > 50) {
+                header.classList.add("hidden-on-scroll");
+            } else {
+                header.classList.remove("hidden-on-scroll");
+            }
+        }
 
         // --- Tab Switching Logic ---
         function switchTab(tab) {
@@ -343,7 +413,7 @@
             formData.append('plotId', plotId);
 
             try {
-                const response = await fetch('http://localhost:3000/api/vault/upload', {
+                const response = await fetch('/api/vault/upload', {
                     method: 'POST',
                     body: formData 
                 });
@@ -365,7 +435,7 @@
 
         async function loadVaultFiles(plotId) {
             try {
-                const response = await fetch(`http://localhost:3000/api/vault/${plotId}`);
+                const response = await fetch(`/api/vault/${plotId}`);
                 if (!response.ok) return;
 
                 const files = await response.json();
@@ -397,7 +467,7 @@
                                     <p class="text-xs text-gray-400">Saved Document</p>
                                 </div>
                             </div>
-                            <button onclick="openFile('http://localhost:3000${file.file_path}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm px-3 py-1 bg-blue-50 rounded border border-blue-100">View</button>
+                            <button onclick="openFile('${file.file_path}')" class="text-blue-600 hover:text-blue-800 font-bold text-sm px-3 py-1 bg-blue-50 rounded border border-blue-100">View</button>
                         `;
                         grid.appendChild(fileCard);
                     });
@@ -425,8 +495,8 @@
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-200 hover:bg-gray-50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 align-top min-w-[120px]"><div class="font-bold text-gray-800">${displayFormattedDate}</div></td>
-                    <td class="p-3 align-top min-w-[100px]"><div class="font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded inline-block text-sm">Day ${dayCount}</div></td>
+                    <td class="sticky-col-1 p-3 align-top min-w-[120px]"><div class="font-bold text-gray-800">${displayFormattedDate}</div></td>
+                    <td class="sticky-col-2 p-3 align-top min-w-[100px]"><div class="font-bold text-purple-700 bg-purple-100 px-2 py-1 rounded inline-block text-sm">Day ${dayCount}</div></td>
                     <td class="p-3 align-top min-w-[280px]">
                         <div class="space-y-2">
                             <select id="sprayTime_${dayCount}" class="w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-purple-500 focus:outline-none bg-white"><option value="">Select Time</option><option value="Morning">Morning</option><option value="Evening">Evening</option></select>
@@ -464,8 +534,8 @@
                 const tr = document.createElement('tr');
                 tr.className = "border-b border-gray-200 hover:bg-gray-50 transition";
                 tr.innerHTML = `
-                    <td class="p-3 align-top min-w-[120px]"><div class="font-bold text-gray-800">${displayFormattedDate}</div></td>
-                    <td class="p-3 align-top min-w-[100px]"><div class="font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded inline-block text-sm">Day ${dayCount}</div></td>
+                    <td class="sticky-col-1 p-3 align-top min-w-[120px]"><div class="font-bold text-gray-800">${displayFormattedDate}</div></td>
+                    <td class="sticky-col-2 p-3 align-top min-w-[100px]"><div class="font-bold text-blue-700 bg-blue-100 px-2 py-1 rounded inline-block text-sm">Day ${dayCount}</div></td>
                     <td class="p-3 align-top min-w-[280px]"><textarea id="planSpray_${dayCount}" rows="2" placeholder="Plan: Chemicals & Quantities" class="w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white resize-y"></textarea></td>
                     <td class="p-3 align-top min-w-[280px]"><textarea id="planFert_${dayCount}" rows="2" placeholder="Plan: Fertilizers & Quantities" class="w-full border border-gray-300 rounded p-1.5 text-sm focus:ring-1 focus:ring-blue-500 focus:outline-none bg-white resize-y"></textarea></td>
                     <td class="p-3 align-middle text-center"><button onclick="savePlanData(${dayCount})" class="bg-blue-600 text-white font-bold py-2 px-4 rounded hover:bg-blue-700 transition shadow-sm text-sm w-full">Save Plan</button></td>
@@ -510,7 +580,7 @@
         
         async function loadExistingManualData(plotId) {
             try {
-                const response = await fetch(`http://localhost:3000/api/schedules/${plotId}`);
+                const response = await fetch(`/api/schedules/${plotId}`);
                 if (!response.ok) return;
                 const savedData = await response.json();
                 savedData.forEach(record => {
@@ -551,7 +621,7 @@
             };
             btnElement.innerText = "...";
             try {
-                const response = await fetch('http://localhost:3000/api/schedules', {
+                const response = await fetch('/api/schedules', {
                     method: 'POST', headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(rowData)
                 });
@@ -606,7 +676,7 @@
             };
 
             try {
-                const response = await fetch('http://localhost:3000/api/preplan', {
+                const response = await fetch('/api/preplan', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(rowData)
@@ -631,8 +701,7 @@
             const lang = localStorage.getItem('appLanguage') || 'en';
 
             try {
-                // Fetch only saved data from the database
-                const response = await fetch(`http://localhost:3000/api/schedules/${plotId}`);
+                const response = await fetch(`/api/schedules/${plotId}`);
                 const data = await response.json();
 
                 if (data.length === 0) {
@@ -640,20 +709,16 @@
                     return;
                 }
 
-                // Create CSV header
                 let csvContent = "Day,Date,Spray Time,Water(L),Chemicals,Fertilizer Time,Fert Water(L),Fertilizers,Workers,Labor Charges\n";
 
-                // Add data rows
                 data.forEach(row => {
                     const date = row.schedule_date.split('T')[0];
-                    // Replace commas in text fields with spaces so it does not break the CSV format
                     const sprayChem = row.spray_chemicals ? row.spray_chemicals.replace(/,/g, ' ') : '';
                     const fertItems = row.fert_items ? row.fert_items.replace(/,/g, ' ') : '';
 
                     csvContent += `${row.day_number},${date},${row.spray_time || ''},${row.spray_water_qty || ''},${sprayChem},${row.fert_time || ''},${row.fert_water_qty || ''},${fertItems},${row.labor_workers || ''},${row.labor_charges || ''}\n`;
                 });
 
-                // Create the download link
                 const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
@@ -678,8 +743,7 @@
             const lang = localStorage.getItem('appLanguage') || 'en';
 
             try {
-                // Fetch saved data
-                const response = await fetch(`http://localhost:3000/api/schedules/${plotId}`);
+                const response = await fetch(`/api/schedules/${plotId}`);
                 const data = await response.json();
 
                 if (data.length === 0) {
@@ -687,17 +751,14 @@
                     return;
                 }
 
-                // Initialize jsPDF
                 const { jsPDF } = window.jspdf;
                 const doc = new jsPDF();
 
-                // Add Title
                 doc.setFontSize(18);
                 doc.text(`Farm Schedule: ${plotName}`, 14, 15);
                 doc.setFontSize(11);
                 doc.text(`Generated on: ${new Date().toLocaleDateString()}`, 14, 22);
 
-                // Prepare table data
                 const tableColumn = ["Day", "Date", "Spray Details", "Fertilizer Details", "Labor (Rs)"];
                 const tableRows = [];
 
@@ -710,16 +771,14 @@
                     tableRows.push([row.day_number, date, spray, fert, labor]);
                 });
 
-                // Generate Table in PDF
                 doc.autoTable({
                     head: [tableColumn],
                     body: tableRows,
                     startY: 30,
                     theme: 'grid',
-                    headStyles: { fillColor: [107, 33, 168] } // Purple color matching your theme
+                    headStyles: { fillColor: [107, 33, 168] } 
                 });
 
-                // Save PDF
                 doc.save(`${plotName}_Schedule.pdf`);
 
                 const msg = lang === 'en' ? "PDF Exported Successfully" : (lang === 'mr' ? "PDF यशस्वीरित्या एक्सपोर्ट झाली" : "PDF सफलतापूर्वक निर्यात किया गया");

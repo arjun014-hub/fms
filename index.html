@@ -3,23 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Grape Farm Management</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #f4f4f9; }
-        .hero { max-width: 600px; margin: auto; }
-        h1 { color: #2c3e50; }
-        .btn { display: inline-block; padding: 15px 30px; margin: 10px; text-decoration: none; border-radius: 5px; font-weight: bold; }
-        .btn-login { background-color: #3498db; color: white; }
-        .btn-register { background-color: #27ae60; color: white; }
-    </style>
+    <title>Grape Farm Manager</title>
+    <!-- This script is required to make Tailwind CSS classes work -->
+    <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body>
-    <div class="hero">
-        <h1>Grape Farm Management System</h1>
-        <p>Your digital solution for planning, pruning, and managing farm schedules with ease.</p>
-        <br>
-        <a href="login.html" class="btn btn-login">Login</a>
-        <a href="register.html" class="btn btn-register">Get Started</a>
+<body class="bg-purple-50 m-0 p-0">
+    <!-- Grape Themed Hero Section -->
+    <div class="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-purple-800 to-green-900 overflow-hidden">
+        
+        <!-- Main Content Container -->
+        <div class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            
+            <h1 class="text-4xl tracking-tight font-extrabold text-white sm:text-5xl md:text-6xl drop-shadow-lg">
+                <span class="block">Smart Management for</span>
+                <span class="block text-green-400 mt-2">Your Grape Farm</span>
+            </h1>
+            
+            <p class="mt-4 max-w-lg mx-auto text-base text-purple-100 sm:text-lg md:mt-6 md:text-xl md:max-w-3xl drop-shadow-md">
+                Streamline your scheduling, track your plots, and manage your fertilizer and spray plans all in one secure platform.
+            </p>
+            
+            <!-- Button Container -->
+            <div class="mt-10 max-w-md mx-auto flex flex-col sm:flex-row sm:justify-center gap-4 md:mt-12">
+                
+                <div class="rounded-md shadow-lg w-full sm:w-auto">
+                    <a href="login.html" class="w-full flex items-center justify-center px-8 py-3 border border-transparent text-base font-bold rounded-md text-purple-900 bg-white hover:bg-green-400 hover:text-white md:py-4 md:text-lg md:px-10 transition duration-300 ease-in-out">
+                        Login to Dashboard
+                    </a>
+                </div>
+                
+                <div class="rounded-md shadow-lg w-full sm:w-auto mt-3 sm:mt-0">
+                    <a href="register.html" class="w-full flex items-center justify-center px-8 py-3 border-2 text-base font-bold rounded-md text-white border-purple-400 bg-purple-700 bg-opacity-50 hover:bg-purple-600 hover:border-white md:py-4 md:text-lg md:px-10 transition duration-300 ease-in-out">
+                        Create an Account
+                    </a>
+                </div>
+                
+            </div>
+            
+        </div>
     </div>
 </body>
 </html>

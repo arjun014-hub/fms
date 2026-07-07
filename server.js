@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mysql = require('mysql2');
 const cors = require('cors');
@@ -176,13 +177,36 @@ app.post('/api/vault/upload', upload.single('file'), (req, res) => {
 });
 
 app.get('/api/vault/:plotId', (req, res) => {
-    const query = 'SELECT * FROM vault_files WHERE plot_id = ? ORDER BY uploaded_at DESC';
+    // Fixed: Changed 'uploaded_at' to 'created_at' to match your actual database table
+    const query = 'SELECT * FROM vault_files WHERE plot_id = ? ORDER BY created_at DESC';
     db.query(query, [req.params.plotId], (err, results) => {
         if (err) return res.status(500).json({ error: err.message });
         res.json(results);
     });
 });
-
+// ==========================================
+// 8. USER PROFILE API
+// ==========================================
+app.post('/api/change-password', (req, res) => {
+    const { userId, oldPassword, newPassword } = req.body;
+    
+    // First, verify the old password is correct
+    const checkQuery = 'SELECT * FROM users WHERE id = ? AND password = ?';
+    db.query(checkQuery, [userId, oldPassword], (err, results) => {
+        if (err) return res.status(500).json({ error: 'Database error' });
+        
+        if (results.length === 0) {
+            return res.status(401).json({ error: 'Incorrect current password' });
+        }
+        
+        // If correct, update to the new password
+        const updateQuery = 'UPDATE users SET password = ? WHERE id = ?';
+        db.query(updateQuery, [newPassword, userId], (err, updateResult) => {
+            if (err) return res.status(500).json({ error: 'Failed to update password' });
+            res.json({ message: 'Password updated successfully!' });
+        });
+    });
+});
 // ==========================================
 // SERVER START
 // ==========================================

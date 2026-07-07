@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>User Profile - Grape Farm Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans leading-normal tracking-normal">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-purple-800 p-4 shadow-lg">
+        <div class="max-w-6xl mx-auto flex justify-between items-center text-white">
+            <div class="font-bold text-xl">Grape Farm Manager</div>
+            <a href="dashboard.html" class="hover:text-green-400 font-semibold transition">Back to Dashboard</a>
+        </div>
+    </nav>
+
+    <!-- Main Profile Container -->
+    <div class="max-w-4xl mx-auto mt-10 p-6">
+        
+        <!-- Profile Header -->
+        <div class="bg-white rounded-lg shadow-md p-6 mb-8 border-t-4 border-green-500">
+            <h2 class="text-2xl font-bold text-purple-900 mb-2">My Profile</h2>
+            <p class="text-gray-600"><strong>Username:</strong> <span id="display-username">Loading...</span></p>
+            <p class="text-gray-600"><strong>User ID:</strong> <span id="display-userid">Loading...</span></p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            
+            <!-- Saved Plots Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-purple-600">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">My Saved Plots</h3>
+                <ul id="plot-list" class="divide-y divide-gray-200">
+                    <li class="py-3 text-gray-500 italic">Loading plots...</li>
+                </ul>
+            </div>
+
+            <!-- Change Password Section -->
+            <div class="bg-white rounded-lg shadow-md p-6 border-t-4 border-purple-600">
+                <h3 class="text-xl font-bold text-gray-800 mb-4">Change Password</h3>
+                
+                <form id="change-password-form">
+                    <div class="mb-4">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="old_password">Current Password</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-purple-500" id="old_password" type="password" required>
+                    </div>
+                    
+                    <div class="mb-6">
+                        <label class="block text-gray-700 text-sm font-bold mb-2" for="new_password">New Password</label>
+                        <input class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:border-purple-500" id="new_password" type="password" required>
+                    </div>
+                    
+                    <button class="bg-purple-700 hover:bg-green-500 text-white font-bold py-2 px-4 rounded w-full transition duration-300" type="submit">
+                        Update Password
+                    </button>
+                    <p id="password-message" class="text-sm mt-3 text-center hidden"></p>
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            const userId = localStorage.getItem('userId');
+            const username = localStorage.getItem('username');
+
+            if (!userId) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            document.getElementById('display-username').innerText = username;
+            document.getElementById('display-userid').innerText = userId;
+
+            try {
+                const response = await fetch(`/api/plots/${userId}`);
+                const plots = await response.json();
+                const plotList = document.getElementById('plot-list');
+                
+                plotList.innerHTML = ''; 
+                
+                if (plots.length === 0) {
+                    plotList.innerHTML = '<li class="py-3 text-gray-500 italic">No plots saved yet.</li>';
+                } else {
+                    plots.forEach(plot => {
+                        const li = document.createElement('li');
+                        li.className = "py-3 flex justify-between items-center";
+                        li.innerHTML = `
+                            <span class="font-bold text-gray-800">${plot.plot_name}</span>
+                            <span class="text-sm bg-green-100 text-green-800 py-1 px-2 rounded font-bold">${plot.pruning_type} Pruning</span>
+                        `;
+                        plotList.appendChild(li);
+                    });
+                }
+            } catch (error) {
+                console.error("Error loading plots:", error);
+                document.getElementById('plot-list').innerHTML = '<li class="py-3 text-red-500 font-bold">Failed to load plots.</li>';
+            }
+        });
+
+        document.getElementById('change-password-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const oldPassword = document.getElementById('old_password').value;
+            const newPassword = document.getElementById('new_password').value;
+            const userId = localStorage.getItem('userId');
+            const messageEl = document.getElementById('password-message');
+            
+            messageEl.classList.remove('hidden');
+            messageEl.innerText = "Updating...";
+            messageEl.className = "text-sm mt-3 text-center text-blue-500 font-bold";
+
+            try {
+                const response = await fetch('/api/change-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ userId, oldPassword, newPassword })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    messageEl.innerText = data.message;
+                    messageEl.className = "text-sm mt-3 text-center text-green-500 font-bold";
+                    document.getElementById('change-password-form').reset();
+                } else {
+                    messageEl.innerText = data.error;
+                    messageEl.className = "text-sm mt-3 text-center text-red-500 font-bold";
+                }
+            } catch (error) {
+                messageEl.innerText = "Connection error. Please try again.";
+                messageEl.className = "text-sm mt-3 text-center text-red-500 font-bold";
+            }
+        });
+    </script>
+</body>
+</html>

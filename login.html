@@ -6,6 +6,34 @@
     <title>Grape Farm Manager - Login</title>
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
+<style>
+    .password-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  width: 100%; /* Adjust to match your current form width */
+}
+
+.password-container input {
+  width: 100%;
+  padding-right: 60px; /* Leaves room for the button so text does not hide behind it */
+}
+
+.toggle-password {
+  position: absolute;
+  right: 10px; /* Positions it inside the right edge of the input */
+  background: none;
+  border: none;
+  color: #007bff; /* You can change this to match your theme color */
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.toggle-password:hover {
+  text-decoration: underline;
+}
+
+</style>
 <body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col relative overflow-hidden">
 
     <header class="bg-purple-800 text-white p-4 shadow-md flex justify-between items-center z-10">
@@ -32,7 +60,10 @@
 
                 <div>
                     <label id="lblPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                    <input type="password" id="passwordInput" placeholder="Enter your password" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                    <div class="password-container">
+                        <input type="password" id="password" name="password" placeholder="Enter Password" required>
+                        <button type="button" class="toggle-password" onclick="toggleVisibility('password', this)">Show</button>
+                    </div>
                 </div>
 
                 <button type="button" id="btnLogin" onclick="login()" class="w-full bg-purple-700 text-white font-bold py-3 rounded-lg hover:bg-purple-800 transition shadow-sm mt-6">
@@ -163,6 +194,17 @@
                 showNotification(emptyMsg, "error");
             }
         }
+  function toggleVisibility(inputId, buttonElement) {
+    const passwordInput = document.getElementById(inputId);
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      buttonElement.textContent = 'Hide';
+    } else {
+      passwordInput.type = 'password';
+      buttonElement.textContent = 'Show';
+    }
+  }
     </script>
 </body>
 </html>
