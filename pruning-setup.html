@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grape Farm Manager - Plot Setup</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col relative overflow-hidden">
+
+    <header class="bg-purple-800 text-white p-4 shadow-md flex justify-between items-center z-10">
+        <h1 id="headerTitle" class="text-xl font-bold tracking-wide">Grape Farm Manager</h1>
+        <button id="btnBack" onclick="goBack()" class="text-sm text-purple-200 hover:text-white font-bold transition">Cancel & Go Back</button>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-lg p-8">
+            
+            <div class="text-center mb-6">
+                <span id="badgeSetup" class="bg-purple-100 text-purple-800 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wide">One-Time Setup</span>
+                <h2 id="setupTitle" class="text-2xl font-bold text-gray-900 mt-4">Setup Plot</h2>
+                <p id="setupSub" class="text-gray-500 mt-2">Select the pruning season and date for this plot. This cannot be changed later.</p>
+            </div>
+
+            <form id="setupForm" class="space-y-6">
+                
+                <div>
+                    <label id="lblSeason" class="block text-sm font-medium text-gray-700 mb-3">Select Pruning Season</label>
+                    <div class="grid grid-cols-2 gap-4">
+                        
+                        <label class="cursor-pointer">
+                            <input type="radio" name="pruningType" value="April" class="peer sr-only" required>
+                            <div class="rounded-lg border-2 border-gray-200 p-4 hover:bg-gray-50 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition">
+                                <h3 id="lblAprilTitle" class="font-bold text-gray-900">April Pruning</h3>
+                                <p id="lblAprilSub" class="text-sm text-gray-500 mt-1">Foundation / Back Pruning</p>
+                            </div>
+                        </label>
+
+                        <label class="cursor-pointer">
+                            <input type="radio" name="pruningType" value="October" class="peer sr-only">
+                            <div class="rounded-lg border-2 border-gray-200 p-4 hover:bg-gray-50 peer-checked:border-purple-600 peer-checked:bg-purple-50 transition">
+                                <h3 id="lblOctoberTitle" class="font-bold text-gray-900">October Pruning</h3>
+                                <p id="lblOctoberSub" class="text-sm text-gray-500 mt-1">Fruit / Forward Pruning</p>
+                            </div>
+                        </label>
+
+                    </div>
+                </div>
+
+                <div>
+                    <label id="lblDate" class="block text-sm font-medium text-gray-700 mb-1">Exact Date of Pruning</label>
+                    <input type="date" id="pruningDate" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                    <p id="lblDateSub" class="text-xs text-gray-500 mt-2">This date will act as "Day 1" for your cultivation schedule.</p>
+                </div>
+
+                <button type="button" id="btnSavePlot" onclick="saveSetup()" class="w-full bg-purple-700 text-white font-bold py-3 rounded-lg hover:bg-purple-800 transition shadow-sm mt-6">
+                    Save Plot & Continue
+                </button>
+            </form>
+
+        </div>
+    </main>
+
+    <div id="notificationToast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none">
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <script>
+        // Translations Dictionary
+        const translations = {
+            en: {
+                headerTitle: "Grape Farm Manager", btnBack: "Cancel & Go Back",
+                badgeSetup: "One-Time Setup", setupSub: "Select the pruning season and date for this plot. This cannot be changed later.",
+                lblSeason: "Select Pruning Season", lblAprilTitle: "April Pruning", lblAprilSub: "Foundation / Back Pruning",
+                lblOctoberTitle: "October Pruning", lblOctoberSub: "Fruit / Forward Pruning",
+                lblDate: "Exact Date of Pruning", lblDateSub: "This date will act as 'Day 1' for your cultivation schedule.",
+                btnSavePlot: "Save Plot & Continue"
+            },
+            mr: {
+                headerTitle: "द्राक्ष बाग व्यवस्थापक", btnBack: "रद्द करा आणि मागे जा",
+                badgeSetup: "एक-वेळ सेटअप", setupSub: "या प्लॉटसाठी छाटणीचा हंगाम आणि तारीख निवडा. हे नंतर बदलता येणार नाही.",
+                lblSeason: "छाटणीचा हंगाम निवडा", lblAprilTitle: "एप्रिल छाटणी", lblAprilSub: "खरड छाटणी / फाउंडेशन",
+                lblOctoberTitle: "ऑक्टोबर छाटणी", lblOctoberSub: "फळ छाटणी / गोड बहार",
+                lblDate: "छाटणीची अचूक तारीख", lblDateSub: "ही तारीख तुमच्या वेळापत्रकाचा 'दिवस १' असेल.",
+                btnSavePlot: "प्लॉट सेव्ह करा आणि पुढे जा"
+            },
+            hi: {
+                headerTitle: "अंगूर फार्म मैनेजर", btnBack: "रद्द करें और वापस जाएं",
+                badgeSetup: "एक बार का सेटअप", setupSub: "इस प्लॉट के लिए छंटाई का मौसम और तारीख चुनें। इसे बाद में बदला नहीं जा सकता।",
+                lblSeason: "छंटाई का मौसम चुनें", lblAprilTitle: "अप्रैल छंटाई", lblAprilSub: "फाउंडेशन छंटाई",
+                lblOctoberTitle: "अक्टूबर छंटाई", lblOctoberSub: "फल छंटाई",
+                lblDate: "छंटाई की सटीक तारीख", lblDateSub: "यह तारीख आपके शेड्यूल का 'दिन 1' होगी।",
+                btnSavePlot: "प्लॉट सेव करें और आगे बढ़ें"
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const plotName = localStorage.getItem('newPlotName');
+            const userId = localStorage.getItem('userId');
+            const savedLang = localStorage.getItem('appLanguage') || 'en';
+
+            if (!plotName || !userId) {
+                window.location.href = "dashboard.html";
+                return;
+            }
+
+            applyTranslations(savedLang);
+            updateTitle(plotName, savedLang);
+        });
+
+        function applyTranslations(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            
+            document.getElementById('headerTitle').innerText = t.headerTitle;
+            document.getElementById('btnBack').innerText = t.btnBack;
+            document.getElementById('badgeSetup').innerText = t.badgeSetup;
+            document.getElementById('setupSub').innerText = t.setupSub;
+            document.getElementById('lblSeason').innerText = t.lblSeason;
+            document.getElementById('lblAprilTitle').innerText = t.lblAprilTitle;
+            document.getElementById('lblAprilSub').innerText = t.lblAprilSub;
+            document.getElementById('lblOctoberTitle').innerText = t.lblOctoberTitle;
+            document.getElementById('lblOctoberSub').innerText = t.lblOctoberSub;
+            document.getElementById('lblDate').innerText = t.lblDate;
+            document.getElementById('lblDateSub').innerText = t.lblDateSub;
+            document.getElementById('btnSavePlot').innerText = t.btnSavePlot;
+        }
+
+        function updateTitle(plotName, lang) {
+            const titleElement = document.getElementById('setupTitle');
+            if (lang === 'mr') {
+                titleElement.innerText = `सेटअप: ${plotName}`;
+            } else if (lang === 'hi') {
+                titleElement.innerText = `सेटअप: ${plotName}`;
+            } else {
+                titleElement.innerText = `Setup: ${plotName}`;
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            const msgEl = document.getElementById('toastMessage');
+
+            msgEl.innerText = message;
+            toast.className = `fixed bottom-6 right-6 transform translate-y-0 opacity-100 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none`;
+
+            if (type === 'success') {
+                toast.classList.add('bg-green-600');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-600');
+            } else {
+                toast.classList.add('bg-blue-600');
+            }
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        async function saveSetup() {
+            const pruningTypes = document.getElementsByName('pruningType');
+            let selectedType = null;
+            for (let type of pruningTypes) {
+                if (type.checked) {
+                    selectedType = type.value;
+                    break;
+                }
+            }
+            
+            const pruningDate = document.getElementById('pruningDate').value;
+            const plotName = localStorage.getItem('newPlotName');
+            const userId = localStorage.getItem('userId');
+            const lang = localStorage.getItem('appLanguage') || 'en';
+            const btnElement = document.getElementById('btnSavePlot');
+
+            if (selectedType && pruningDate) {
+                btnElement.innerText = lang === 'en' ? "Saving..." : (lang === 'mr' ? "सेव्ह करत आहे..." : "सेव हो रहा है...");
+                
+                try {
+                    const response = await fetch('/api/plots', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            userId: userId, 
+                            plotName: plotName, 
+                            pruningType: selectedType, 
+                            pruningDate: pruningDate 
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok) {
+                        localStorage.setItem('currentPlotId', data.plotId);
+                        localStorage.setItem('currentPlotName', plotName);
+                        localStorage.setItem('pruningType', selectedType);
+                        localStorage.setItem('pruningDate', pruningDate);
+                        
+                        localStorage.removeItem('newPlotName');
+                        
+                        const successMsg = lang === 'en' ? "Plot saved successfully!" : (lang === 'mr' ? "प्लॉट यशस्वीरित्या सेव्ह झाला!" : "प्लॉट सफलतापूर्वक सेव हो गया!");
+                        showNotification(successMsg);
+                        
+                        setTimeout(() => {
+                            window.location.href = "schedule.html";
+                        }, 1000);
+                    } else {
+                        showNotification("Error: " + data.error, "error");
+                        applyTranslations(lang);
+                    }
+                } catch (error) {
+                    console.error("Connection error:", error);
+                    const errorMsg = lang === 'en' ? "Could not connect to the server." : (lang === 'mr' ? "सर्व्हरशी कनेक्ट होऊ शकले नाही." : "सर्वर से कनेक्ट नहीं हो सका।");
+                    showNotification(errorMsg, "error");
+                    applyTranslations(lang);
+                }
+            } else {
+                const selectMsg = lang === 'en' ? "Please select both a pruning season and a date." : (lang === 'mr' ? "कृपया छाटणीचा हंगाम आणि तारीख दोन्ही निवडा." : "कृपया छंटाई का मौसम और तारीख दोनों चुनें।");
+                showNotification(selectMsg, "error");
+            }
+        }
+
+        function goBack() {
+            localStorage.removeItem('newPlotName');
+            window.location.href = "dashboard.html";
+        }
+    </script>
+</body>
+</html>

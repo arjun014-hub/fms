@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grape Farm Manager - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 font-sans text-gray-800 h-screen flex flex-col relative overflow-hidden">
+
+    <header class="bg-purple-800 text-white p-4 shadow-md flex justify-between items-center z-10">
+        <h1 id="headerTitle" class="text-xl font-bold tracking-wide">Grape Farm Manager</h1>
+        <select id="langSelect" class="bg-purple-700 text-white border border-purple-500 rounded px-2 py-1 text-sm focus:outline-none" onchange="changeLanguage()">
+            <option value="en">English</option>
+            <option value="mr">मराठी (Marathi)</option>
+            <option value="hi">हिन्दी (Hindi)</option>
+        </select>
+    </header>
+
+    <main class="flex-grow flex items-center justify-center p-4">
+        <div class="bg-white rounded-xl shadow-lg border border-gray-200 w-full max-w-md p-8">
+            <div class="text-center mb-8">
+                <h2 id="welcomeText" class="text-2xl font-bold text-gray-900">Create an Account</h2>
+                <p id="subText" class="text-gray-500 mt-2">Sign up to manage your grape plots</p>
+            </div>
+
+            <form id="registerForm" class="space-y-6">
+                <div>
+                    <label id="lblUsername" class="block text-sm font-medium text-gray-700 mb-1">Username</label>
+                    <input type="text" id="usernameInput" placeholder="Enter a new username" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                </div>
+
+                <div>
+                    <label id="lblPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input type="password" id="passwordInput" placeholder="Create a password" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                </div>
+
+                <div>
+                    <label id="lblConfirmPassword" class="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input type="password" id="confirmPasswordInput" placeholder="Confirm your password" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none" required>
+                </div>
+
+                <button type="button" id="btnRegister" onclick="registerUser()" class="w-full bg-purple-700 text-white font-bold py-3 rounded-lg hover:bg-purple-800 transition shadow-sm mt-6">
+                    Register
+                </button>
+            </form>
+
+            <p class="text-center text-sm text-gray-600 mt-6">
+                <span id="loginPrompt">Already have an account?</span> 
+                <a href="login.html" id="loginLink" class="text-purple-700 font-bold hover:underline">Login here</a>
+            </p>
+        </div>
+    </main>
+
+    <div id="notificationToast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none">
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <script>
+        // Translations Dictionary
+        const translations = {
+            en: {
+                title: "Grape Farm Manager", welcome: "Create an Account", sub: "Sign up to manage your grape plots",
+                username: "Username", password: "Password", confirm: "Confirm Password", 
+                registerBtn: "Register", prompt: "Already have an account?", link: "Login here"
+            },
+            mr: {
+                title: "द्राक्ष बाग व्यवस्थापक", welcome: "नवीन खाते तयार करा", sub: "तुमचे प्लॉट्स व्यवस्थापित करण्यासाठी साइन अप करा",
+                username: "युजरनेम", password: "पासवर्ड", confirm: "पासवर्डची पुष्टी करा", 
+                registerBtn: "नोंदणी करा", prompt: "आधीच खाते आहे का?", link: "येथे लॉग इन करा"
+            },
+            hi: {
+                title: "अंगूर फार्म मैनेजर", welcome: "नया खाता बनाएँ", sub: "अपने प्लॉट्स प्रबंधित करने के लिए साइन अप करें",
+                username: "यूज़रनेम", password: "पासवर्ड", confirm: "पासवर्ड की पुष्टि करें", 
+                registerBtn: "रजिस्टर करें", prompt: "क्या आपके पास पहले से खाता है?", link: "यहाँ लॉग इन करें"
+            }
+        };
+
+        // Load saved language when page opens
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('appLanguage') || 'en';
+            document.getElementById('langSelect').value = savedLang;
+            applyTranslations(savedLang);
+        });
+
+        function changeLanguage() {
+            const lang = document.getElementById('langSelect').value;
+            localStorage.setItem('appLanguage', lang);
+            applyTranslations(lang);
+        }
+
+        function applyTranslations(lang) {
+            const t = translations[lang];
+            if (!t) return;
+            
+            document.getElementById('headerTitle').innerText = t.title;
+            document.getElementById('welcomeText').innerText = t.welcome;
+            document.getElementById('subText').innerText = t.sub;
+            document.getElementById('lblUsername').innerText = t.username;
+            document.getElementById('lblPassword').innerText = t.password;
+            document.getElementById('lblConfirmPassword').innerText = t.confirm;
+            document.getElementById('btnRegister').innerText = t.registerBtn;
+            document.getElementById('loginPrompt').innerText = t.prompt;
+            document.getElementById('loginLink').innerText = t.link;
+        }
+
+        // Custom Notification System
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            const msgEl = document.getElementById('toastMessage');
+
+            msgEl.innerText = message;
+            toast.className = `fixed bottom-6 right-6 transform translate-y-0 opacity-100 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none`;
+
+            if (type === 'success') {
+                toast.classList.add('bg-green-600');
+            } else if (type === 'error') {
+                toast.classList.add('bg-red-600');
+            } else {
+                toast.classList.add('bg-blue-600');
+            }
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        async function registerUser() {
+            const username = document.getElementById('usernameInput').value;
+            const password = document.getElementById('passwordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+            const btnElement = document.getElementById('btnRegister');
+            const lang = localStorage.getItem('appLanguage') || 'en';
+            
+            if (username.length === 0 || password.length === 0) {
+                const emptyMsg = lang === 'en' ? "Please enter both a username and a password." : (lang === 'mr' ? "कृपया युजरनेम आणि पासवर्ड दोन्ही टाका." : "कृपया यूज़रनेम और पासवर्ड दोनों दर्ज करें।");
+                showNotification(emptyMsg, "error");
+                return;
+            }
+
+            if (password !== confirmPassword) {
+                const matchMsg = lang === 'en' ? "Passwords do not match. Please try again." : (lang === 'mr' ? "पासवर्ड जुळत नाहीत. कृपया पुन्हा प्रयत्न करा." : "पासवर्ड मेल नहीं खाते। कृपया पुनः प्रयास करें।");
+                showNotification(matchMsg, "error");
+                return;
+            }
+
+            btnElement.innerText = lang === 'en' ? "Registering..." : (lang === 'mr' ? "नोंदणी करत आहे..." : "रजिस्टर हो रहा है...");
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: username, password: password })
+                });
+
+                const data = await response.json();
+
+                if (response.ok) {
+                    const successMsg = lang === 'en' ? "Registration Successful! Redirecting to login..." : (lang === 'mr' ? "नोंदणी यशस्वी! लॉगिनवर पुनर्निर्देशित करत आहे..." : "पंजीकरण सफल! लॉगिन पर रीडायरेक्ट कर रहा है...");
+                    showNotification(successMsg);
+                    
+                    setTimeout(() => {
+                        window.location.href = "login.html";
+                    }, 1500);
+                } else {
+                    showNotification("Error: " + data.error, "error");
+                    applyTranslations(lang);
+                }
+                
+            } catch (error) {
+                console.error("Connection error:", error);
+                const errorMsg = lang === 'en' ? "Could not connect to the server." : (lang === 'mr' ? "सर्व्हरशी कनेक्ट होऊ शकले नाही." : "सर्वर से कनेक्ट नहीं हो सका।");
+                showNotification(errorMsg, "error");
+                applyTranslations(lang);
+            }
+        }
+    </script>
+</body>
+</html>

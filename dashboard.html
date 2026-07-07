@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grape Farm Manager - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 font-sans text-gray-800 h-screen flex flex-col relative overflow-hidden">
+
+    <!-- Header -->
+    <header class="bg-purple-900 text-white p-4 shadow-md flex justify-between items-center z-10 relative">
+        <h1 id="headerTitle" class="text-xl font-bold tracking-wide">Grape Farm Manager</h1>
+        <div class="flex items-center space-x-4">
+            <select id="langSelect" class="bg-purple-800 text-white border border-purple-600 rounded px-2 py-1 text-sm focus:outline-none" onchange="changeLanguage()">
+                <option value="en">English</option>
+                <option value="mr">मराठी (Marathi)</option>
+                <option value="hi">हिन्दी (Hindi)</option>
+            </select>
+            <button id="btnLogout" onclick="logout()" class="text-sm text-purple-200 hover:text-white font-bold transition">Logout</button>
+        </div>
+    </header>
+
+    <!-- Welcome Hero Section -->
+    <div class="bg-gradient-to-br from-purple-800 to-purple-600 text-white py-12 px-6 shadow-md relative overflow-hidden">
+        <div class="absolute top-[-20%] left-[10%] w-32 h-32 bg-white opacity-5 rounded-full"></div>
+        <div class="absolute bottom-[-10%] right-[20%] w-48 h-48 bg-white opacity-5 rounded-full"></div>
+        <div class="absolute top-[20%] right-[5%] w-24 h-24 bg-white opacity-5 rounded-full"></div>
+        
+        <div class="relative z-10 text-center max-w-2xl mx-auto">
+            <h2 id="welcomeTitle" class="text-3xl md:text-4xl font-bold mb-3 tracking-wide">Welcome to Grape Farm Manager</h2>
+            <p id="welcomeDesc" class="text-purple-100 text-sm md:text-base font-medium">
+                Manage your vineyard efficiently. Track pruning dates, organize daily spray and fertilization schedules, and manage your labor records all in one place.
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Container -->
+    <main class="flex-grow p-6 max-w-5xl mx-auto w-full flex flex-col items-center overflow-y-auto">
+        <h3 id="myPlotsTitle" class="text-2xl font-bold text-gray-800 mb-8 border-b-2 border-purple-200 pb-2 px-8">My Plots</h3>
+
+        <!-- Centered Flex Container for Plots -->
+        <div id="plotsGrid" class="flex flex-wrap justify-center gap-6 w-full pb-12">
+            <!-- Plots will be injected here -->
+        </div>
+    </main>
+
+    <!-- Custom Modal for New Plot -->
+    <div id="newPlotModal" class="fixed inset-0 bg-black/60 hidden flex items-center justify-center p-4 z-50">
+        <div class="bg-white rounded-xl shadow-xl w-full max-w-md overflow-hidden">
+            <div class="bg-purple-800 text-white p-4">
+                <h3 id="modalTitle" class="text-lg font-bold">Create New Plot</h3>
+            </div>
+            <div class="p-6 space-y-4">
+                <p id="modalDesc" class="text-sm text-gray-500 mb-2">Give your new plot a name to get started.</p>
+                <div>
+                    <label id="modalInputLabel" class="block text-sm font-medium text-gray-700 mb-1">Plot Name</label>
+                    <input type="text" id="plotNameInput" placeholder="e.g., Plot 1 or Main Vineyard" class="w-full border border-gray-300 rounded-lg p-3 focus:ring-2 focus:ring-purple-500 focus:outline-none">
+                </div>
+                <div class="flex justify-end space-x-3 pt-4">
+                    <button id="btnCancel" onclick="closeModal()" class="bg-gray-100 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-200 font-medium transition">Cancel</button>
+                    <button id="btnContinue" onclick="submitNewPlot()" class="bg-purple-700 text-white px-5 py-2 rounded-lg hover:bg-purple-800 font-medium transition shadow-sm">Continue to Setup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Notification Toast -->
+    <div id="notificationToast" class="fixed bottom-6 right-6 transform translate-y-20 opacity-0 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none">
+        <span id="toastMessage">Notification message</span>
+    </div>
+
+    <script>
+        // Translations Dictionary
+        const translations = {
+            en: {
+                headerTitle: "Grape Farm Manager", logout: "Logout",
+                welcomeTitle: "Welcome to Grape Farm Manager", 
+                welcomeDesc: "Manage your vineyard efficiently. Track pruning dates, organize daily spray and fertilization schedules, and manage your labor records all in one place.",
+                myPlots: "My Plots", createPlot: "Create Plot", clickToView: "Click to view schedule",
+                modalTitle: "Create New Plot", modalDesc: "Give your new plot a name to get started.",
+                modalInputLabel: "Plot Name", btnCancel: "Cancel", btnContinue: "Continue to Setup",
+                day: "Day", of150: "of 150", laborSpent: "Labor Spent: ₹", notStarted: "Not Started", completed: "Completed"
+            },
+            mr: {
+                headerTitle: "द्राक्ष बाग व्यवस्थापक", logout: "लॉग आउट",
+                welcomeTitle: "द्राक्ष बाग व्यवस्थापकमध्ये आपले स्वागत आहे", 
+                welcomeDesc: "तुमची द्राक्षबाग कार्यक्षमतेने व्यवस्थापित करा. छाटणीच्या तारखा, फवारणी आणि खतांचे वेळापत्रक आणि मजुरांच्या नोंदी एकाच ठिकाणी ठेवा.",
+                myPlots: "माझे प्लॉट्स", createPlot: "प्लॉट तयार करा", clickToView: "वेळापत्रक पाहण्यासाठी क्लिक करा",
+                modalTitle: "नवीन प्लॉट तयार करा", modalDesc: "सुरू करण्यासाठी तुमच्या नवीन प्लॉटला नाव द्या.",
+                modalInputLabel: "प्लॉटचे नाव", btnCancel: "रद्द करा", btnContinue: "सेटअप सुरू ठेवा",
+                day: "दिवस", of150: "पैकी 150", laborSpent: "मजुरी खर्च: ₹", notStarted: "सुरू झाले नाही", completed: "पूर्ण झाले"
+            },
+            hi: {
+                headerTitle: "अंगूर फार्म मैनेजर", logout: "लॉग आउट",
+                welcomeTitle: "अंगूर फार्म मैनेजर में आपका स्वागत है", 
+                welcomeDesc: "अपने अंगूर के खेत को कुशलता से प्रबंधित करें। छंटाई की तारीखें, स्प्रे और उर्वरक अनुसूची, और मजदूर रिकॉर्ड एक ही स्थान पर रखें।",
+                myPlots: "मेरे प्लॉट्स", createPlot: "प्लॉट बनाएँ", clickToView: "शेड्यूल देखने के लिए क्लिक करें",
+                modalTitle: "नया प्लॉट बनाएँ", modalDesc: "शुरू करने के लिए अपने नए प्लॉट को एक नाम दें।",
+                modalInputLabel: "प्लॉट का नाम", btnCancel: "रद्द करें", btnContinue: "सेटअप जारी रखें",
+                day: "दिन", of150: "150 में से", laborSpent: "मजदूर खर्च: ₹", notStarted: "शुरू नहीं हुआ", completed: "पूरा हुआ"
+            }
+        };
+
+        function changeLanguage() {
+            const lang = document.getElementById('langSelect').value;
+            localStorage.setItem('appLanguage', lang); 
+            applyTranslations(lang);
+        }
+
+        function applyTranslations(lang) {
+            const t = translations[lang];
+            if (!t) return;
+
+            document.getElementById('langSelect').value = lang;
+            document.getElementById('headerTitle').innerText = t.headerTitle;
+            document.getElementById('btnLogout').innerText = t.logout;
+            document.getElementById('welcomeTitle').innerText = t.welcomeTitle;
+            document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
+            document.getElementById('myPlotsTitle').innerText = t.myPlots;
+            document.getElementById('modalTitle').innerText = t.modalTitle;
+            document.getElementById('modalDesc').innerText = t.modalDesc;
+            document.getElementById('modalInputLabel').innerText = t.modalInputLabel;
+            document.getElementById('btnCancel').innerText = t.btnCancel;
+            document.getElementById('btnContinue').innerText = t.btnContinue;
+
+            if (window.currentPlotsData) {
+                renderPlots(window.currentPlotsData);
+            }
+        }
+
+        function showNotification(message, type = 'success') {
+            const toast = document.getElementById('notificationToast');
+            const msgEl = document.getElementById('toastMessage');
+            msgEl.innerText = message;
+            toast.className = `fixed bottom-6 right-6 transform translate-y-0 opacity-100 transition-all duration-300 z-50 flex items-center shadow-xl rounded-lg px-6 py-4 text-white font-bold pointer-events-none`;
+            
+            if (type === 'success') toast.classList.add('bg-green-600');
+            else if (type === 'error') toast.classList.add('bg-red-600');
+            else toast.classList.add('bg-blue-600');
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+                toast.classList.remove('translate-y-0', 'opacity-100');
+            }, 3000);
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const savedLang = localStorage.getItem('appLanguage') || 'en';
+            applyTranslations(savedLang);
+            loadPlots();
+        });
+
+        async function loadPlots() {
+            const userId = localStorage.getItem('userId');
+            if (!userId) {
+                window.location.href = "login.html";
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/plots/${userId}`);
+                const plots = await response.json();
+                window.currentPlotsData = plots; 
+                renderPlots(plots);
+            } catch (error) {
+                showNotification("Could not load plots from the server.", "error");
+            }
+        }
+
+        function renderPlots(plots) {
+            const grid = document.getElementById('plotsGrid');
+            grid.innerHTML = ''; 
+            const lang = localStorage.getItem('appLanguage') || 'en';
+            const t = translations[lang];
+
+            const boxClasses = "bg-white border border-gray-200 rounded-xl flex flex-col items-center justify-center hover:shadow-md transition shadow-sm w-48 h-56 md:w-56 md:h-60 shrink-0 relative overflow-hidden";
+
+            // Create Plot Button
+            const createBtn = document.createElement('button');
+            createBtn.onclick = openNewPlotModal;
+            createBtn.className = `${boxClasses} border-2 border-dashed border-purple-400 hover:border-purple-600 hover:bg-purple-50 group`;
+            createBtn.innerHTML = `
+                <div class="bg-purple-100 text-purple-700 rounded-full w-12 h-12 flex items-center justify-center mb-3 group-hover:bg-purple-200 transition">
+                    <span class="text-3xl font-bold leading-none pb-1">+</span>
+                </div>
+                <span class="font-semibold text-lg text-purple-800">${t.createPlot}</span>
+            `;
+            grid.appendChild(createBtn);
+
+            // Existing Plots
+            plots.forEach(plot => {
+                // Calculate current day based on pruning date
+                const today = new Date();
+                const pruneDate = new Date(plot.pruning_date);
+                let currentDayNum = Math.floor((today - pruneDate) / (1000 * 60 * 60 * 24)) + 1;
+                
+                let dayDisplay = "";
+                if (currentDayNum < 1) {
+                    dayDisplay = t.notStarted;
+                } else if (currentDayNum > 150) {
+                    dayDisplay = t.completed;
+                } else {
+                    dayDisplay = `${t.day} ${currentDayNum} ${t.of150}`;
+                }
+
+                const plotBtn = document.createElement('button');
+                plotBtn.onclick = () => openExistingPlot(plot.id, plot.plot_name, plot.pruning_type, plot.pruning_date);
+                plotBtn.className = `${boxClasses} hover:border-purple-500`;
+                plotBtn.innerHTML = `
+                    <div class="bg-purple-100 w-full p-2 absolute top-0 text-center border-b border-purple-200">
+                        <span class="text-xs font-bold text-purple-800 uppercase tracking-wide">${plot.pruning_type} Pruning</span>
+                    </div>
+                    <div class="flex flex-col items-center justify-center mt-6 p-4 w-full h-full">
+                        <span class="text-lg font-bold text-gray-800 text-center break-words line-clamp-1 w-full">${plot.plot_name}</span>
+                        
+                        <div class="bg-gray-50 w-full mt-3 p-2 rounded border border-gray-200 text-center shadow-sm">
+                            <p class="text-sm font-bold text-purple-700">${dayDisplay}</p>
+                            <p class="text-xs font-bold text-gray-600 mt-1">${t.laborSpent}${plot.total_labor}</p>
+                        </div>
+                        
+                        <span class="text-xs text-gray-400 mt-3 font-medium hover:text-purple-600 transition">${t.clickToView}</span>
+                    </div>
+                `;
+                grid.appendChild(plotBtn);
+            });
+        }
+
+        function openNewPlotModal() {
+            document.getElementById('newPlotModal').classList.remove('hidden');
+            document.getElementById('plotNameInput').focus();
+        }
+
+        function closeModal() {
+            document.getElementById('newPlotModal').classList.add('hidden');
+            document.getElementById('plotNameInput').value = ''; 
+        }
+
+        function submitNewPlot() {
+            const plotName = document.getElementById('plotNameInput').value;
+            if (plotName && plotName.trim() !== "") {
+                localStorage.setItem('newPlotName', plotName);
+                window.location.href = "pruning-setup.html";
+            } else {
+                const lang = localStorage.getItem('appLanguage') || 'en';
+                const msg = lang === 'mr' ? "कृपया प्लॉटचे नाव प्रविष्ट करा." : (lang === 'hi' ? "कृपया प्लॉट का नाम दर्ज करें।" : "Please enter a plot name.");
+                showNotification(msg, "error");
+            }
+        }
+
+        function openExistingPlot(plotId, plotName, pruningType, pruningDate) {
+            localStorage.setItem('currentPlotId', plotId);
+            localStorage.setItem('currentPlotName', plotName);
+            localStorage.setItem('pruningType', pruningType);
+            localStorage.setItem('pruningDate', pruningDate);
+            window.location.href = "schedule.html";
+        }
+
+        function logout() {
+            localStorage.removeItem('userId');
+            window.location.href = "login.html";
+        }
+    </script>
+</body>
+</html>
